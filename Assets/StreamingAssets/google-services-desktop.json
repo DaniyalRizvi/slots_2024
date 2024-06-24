@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "759018898574",
+    "firebase_url": "https://slots-world-tour-2024-default-rtdb.firebaseio.com",
+    "project_id": "slots-world-tour-2024",
+    "storage_bucket": "slots-world-tour-2024.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:759018898574:android:dfa6b00cd2fcae7dca35df",
+        "android_client_info": {
+          "package_name": "com.blackguardenterprises.slotsworldtour2024"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFlgbFkmb82H5E_HMsbErxIJMErMFm_xs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

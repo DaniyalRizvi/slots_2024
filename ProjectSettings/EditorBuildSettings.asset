@@ -1,0 +1,125 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/1_Lobby.unity
+    guid: 126811d64807aa14b9424800f08ef417
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Safari Spin.unity
+    guid: a4a870bc2a0ad4d4b8f69cb90a28e768
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Alien Adventure.unity
+    guid: ea3230739669a004a94043e4755067b7
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Dragon's Treasure Trove.unity
+    guid: e92c20cb0ceeb6945b373a5a73ff00ab
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Dance Floor Dream.unity
+    guid: 50dc86e62197a1b408de86691b4af3e0
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Sandy Shoreline Stash.unity
+    guid: ef4cb93fc77e14a499d7c4bfe3fdd389
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Vegas Victory.unity
+    guid: 62b70c45bf168ff42a980f4c9d9fb289
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Emerald Isle's Riches.unity
+    guid: 049038409bc6e2141a2ad74634886e15
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Amazon Adventures.unity
+    guid: 19250314af5e02646b4b5f3aef148a27
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Riches Retreat.unity
+    guid: 501af5c4fc60faa44ad79772672f706d
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Castle Conquest.unity
+    guid: 4b9267b76ded54d4c87a729f45bfc935
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Cowgirl's Hideout.unity
+    guid: f02a8c813a9d45d419af365531d0a002
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Space Odyssey.unity
+    guid: 06d1aef52aa0d1d49a659a7552a460c5
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Sin City Showdown.unity
+    guid: 82f00a3ae1d7e0f40a035a6cd0e8dbc2
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Disco Diva.unity
+    guid: 20dfc3cc7b21cb14684863f5a2466841
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Tropical Treasure.unity
+    guid: 70adb4d64d34c7943849802965210c77
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Kingdom Riches Quest.unity
+    guid: a0473fa8b7373754783c47a8ddfad130
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Cyborg's Coin Cache.unity
+    guid: 606e3116784255f46889726d8d3a6436
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Nightclub Party.unity
+    guid: 5338f7da1d9e08048806c9a33d41b900
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Lion's Lair.unity
+    guid: 0f016c0d6ca630a4585fc65c1efdc2ef
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Knights Fortune Frenzy.unity
+    guid: 0187bbb197c59c14690b6b3386a0766b
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Paradise Payday.unity
+    guid: 0881fa9e500a94d42aec634773d98ace
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Saloon Showdown.unity
+    guid: ed9c72c6935602341a6bbb392b1d94fc
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/High Roller Haven.unity
+    guid: 9d1b1b81b6c60dc4095eeb4089a11914
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Bikini Island.unity
+    guid: 4e71deddb148204448bd1f704cecc00d
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Futuristic Feast.unity
+    guid: efea2cfbae4f53743a47670087b8e3e5
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Galactic Gambit.unity
+    guid: 8ee68d724baff2e44930bce2fffca49e
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Vegas Ladies.unity
+    guid: cc7aefba4ab1d1a4482d43d64ba63074
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Tarzan's Treasure Trail.unity
+    guid: 1180d35ba4a9b9e4397aec65c4401b09
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Medieval Times.unity
+    guid: c84391480371cc8478a56979ffd5d58e
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Wild Jungle Wonders.unity
+    guid: c6f2ce8e85e64ac489d27fdd1d65afd3
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Princess's Secret.unity
+    guid: 488bda7181b15d640b71f041b132b366
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Neon Nights.unity
+    guid: eb0c98c6b3e75d649b26f64f86b3bb9e
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Sun-Kissed Sensation.unity
+    guid: 030335722764c9942b08b0f0bce9d72c
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Gunslinger's Gold Rush.unity
+    guid: a7b8f2c23c9095649b9ab6c66e86a6a6
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Jungle Vault.unity
+    guid: b82926b596b33b3459b26196b6938ffd
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Santa's Dreams.unity
+    guid: 87ef0a1864bcf6b46a39e6563c445e75
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Velvet Vault.unity
+    guid: 0af2c77924091aa468bd311eff9b23a6
+  - enabled: 1
+    path: Assets/1_ModernSuitsSlotAsset/Scenes_Modern/Striptacular.unity
+    guid: 985f10b2ab492334c845e9f869bcbd89
+  m_configObjects: {}
