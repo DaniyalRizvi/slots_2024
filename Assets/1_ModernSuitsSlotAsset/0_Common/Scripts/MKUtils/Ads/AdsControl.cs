@@ -313,7 +313,7 @@ namespace Mkey
             bannerView = new BannerView(adUnitId, AdSize.Banner, bannerPosition);
 
             // create our request used to load the ad.
-            AdRequest adRequest = new AdRequest.Builder().Build();
+            AdRequest adRequest = new AdRequest();
             adRequest.Keywords.Add("unity-admob-sample");
 
             bannerView.OnBannerAdLoaded += HandleOnAdLoaded;
@@ -408,9 +408,8 @@ namespace Mkey
       Debug.Log("Loading the interstitial ad.");
 
       // create our request used to load the ad.
-      var adRequest = new AdRequest.Builder()
-              .AddKeyword("unity-admob-sample")
-              .Build();
+      var adRequest = new AdRequest();
+      adRequest.Keywords.Add("unity-admob-sample");
 
 
       // send the request to load the ad.
@@ -622,7 +621,7 @@ namespace Mkey
 
 
             // create our request used to load the ad.
-            var adRequest = new AdRequest.Builder().Build();
+            var adRequest = new AdRequest();
 
             // send the request to load the ad.
             RewardedAd.Load(adUnitId, adRequest,
