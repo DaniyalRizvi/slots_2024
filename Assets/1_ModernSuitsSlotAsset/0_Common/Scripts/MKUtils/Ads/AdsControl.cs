@@ -14,35 +14,6 @@ using UnityEngine.UI;
 using UnityEditor;
 #endif
 
-/*
-  test https://developers.google.com/admob/unity/test-ads
-  Banner 	        ca-app-pub-3940256099942544/6300978111
-  Interstitial 	    ca-app-pub-3940256099942544/1033173712
-  Rewarded Video 	ca-app-pub-3940256099942544/5224354917
-  Native Advanced 	ca-app-pub-3940256099942544/2247696110
-
-  21.01.2020 
-    - first release
-    09.03.2020 
-        - change  NOADS -> ADDGADS – symbol (from project settings)
-    08.04.2020
-        -destroy banner
-    15.04.2020
-        show banner, hide banner
-    23.05.2020
-        serialize ads ids
-    14.07.2020 
-        - fix showrewardedad (noads), add editor
-    03.10.2021 
-        - fix 6.1 admob issues, 
-    05.10.2021
-        - check interstitial != null
-    13.05.2023
-        - fix 8.0 admob issues
-    12.02.2024
-        - fix interstitial reload
- */
-
 namespace Mkey
 {
     public class AdsControl : MonoBehaviour
@@ -322,24 +293,7 @@ namespace Mkey
             // send the request to load the ad.
             Debug.Log("Loading banner ad.");
             bannerView.LoadAd(adRequest);
-
-            // Raised when an ad is loaded into the banner view.
-    //        bannerView.OnBannerAdLoaded += () =>
-    //{
-    //    bannerControl = FindObjectOfType<BannerControl>();
-    //    bannerControl.ShowBannerActions();
-    //    Debug.Log("Banner view loaded an ad with response : "
-    //        + bannerView.GetResponseInfo());
-    //};
-    // Raised when an ad fails to load into the banner view.
-    //bannerView.OnBannerAdLoadFailed += (LoadAdError error) =>
-    //{
-    //    bannerControl = FindObjectOfType<BannerControl>();
-    //    bannerControl.HideBannerActions();
-    //    Debug.LogError("Banner view failed to load an ad with error : "
-    //        + error);
-    //};
-    // Raised when the ad is estimated to have earned money.
+            
     bannerView.OnAdPaid += (AdValue adValue) =>
     {
         Debug.Log(String.Format("Banner view paid {0} {1}.",
@@ -803,9 +757,4 @@ namespace Mkey
     }
 #endif
 }
-/*
- * https://github.com/googleads/googleads-mobile-unity/blob/master/samples/HelloWorld/Assets/Scripts/GoogleMobileAdsDemoScript.cs
- * https://developers.google.com/admob/unity/interstitial
- * https://developers.google.com/admob/unity/banner
- * https://developers.google.com/admob/unity/rewarded-video
- */
+
