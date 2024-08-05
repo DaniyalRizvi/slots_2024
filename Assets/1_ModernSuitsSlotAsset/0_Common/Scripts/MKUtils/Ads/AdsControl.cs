@@ -1,14 +1,8 @@
-﻿// #define ADDGADS
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
-
-#if ADDGADS
-using GoogleMobileAds.Api;
-using UnityEngine.UI;
-#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -23,46 +17,31 @@ namespace Mkey
         private bool customBannerRequest = false;
         private bool customInterstitialRequest = false;
         private bool customRewardedAdRequest = false;
-
+        [Header("App ID")] [SerializeField] private string appID;
         [Header("Banner")]
-#if ADDGADS
         [SerializeField]
         private bool requestBanner = true;
-        [SerializeField]
-        private AdPosition bannerPosition = AdPosition.Bottom;
-#endif
+        //[SerializeField]
+       // private AdPosition bannerPosition = AdPosition.Bottom;
         [SerializeField]
         private string bannerAdUnitIdAndroid = "ca-app-pub-3940256099942544/6300978111"; // test
         [SerializeField]
         private string bannerAdUnitIdIos = "ca-app-pub-3940256099942544/2934735716"; // test
 
         [Header("Interstitial")]
-#if ADDGADS
         [SerializeField]
         private bool requestInterstitial = true;
-#endif
         [SerializeField]
         private string interstitialAdUnitIdAndroid = "ca-app-pub-3940256099942544/1033173712";
         [SerializeField]
         private string interstitialAdUnitIdIos = "ca-app-pub-3940256099942544/4411468910";
 
         [Header("Rewarded ads")]
-#if ADDGADS
         [SerializeField]
         private bool requestRewardedAds = true;
-#endif
         [SerializeField]
         private List<RewardAd> rewardAds;
 
-#if ADDGADS
-        [Space(16)]
-        [SerializeField]
-        private bool showTestGui = false;
-
-        #region temp vars
-        private InterstitialAd interstitial;
-        private BannerView bannerView;
-        private RewardedAd rewardedAd;
         private float deltaTime = 0.0f;
         private Action<bool, string, double> rewardCallBack; // <well, args.type or message, args.amount>
         private Action rewardedOpenedCallBack; // MSound.SetSound(false); 
@@ -70,7 +49,6 @@ namespace Mkey
         private Action interstitialOpenedCallBack; // MSound.SetSound(false); 
         private Action interstitialClosedCallBack; // MSound.SetSound(true);
         private static string outputMessage = string.Empty;
-        #endregion temp vars
 
         public static AdsControl Instance;
 
@@ -86,18 +64,15 @@ namespace Mkey
 
         private void Start()
         {
+            IronSource.Agent.init(appID);
 
-            MobileAds.SetiOSAppPauseOnBackground(true);
+            if (requestRewardedAds) IronSource.Agent.loadRewardedVideo();
 
-            MobileAds.Initialize(initStatus => { }); // new
+            if (requestInterstitial) IronSource.Agent.loadInterstitial();
 
-            if (requestRewardedAds) CreateAndLoadRewardedAd();
-
-            if (requestInterstitial) RequestInterstitial();
-
-            if (requestBanner /*&& Application.internetReachability != NetworkReachability.NotReachable*/)
+            if (requestBanner)
             {
-                RequestBanner();
+                IronSource.Agent.loadBanner(IronSourceBannerSize.BANNER, IronSourceBannerPosition.BOTTOM);
             }
             else requestBanner = false;
         }
@@ -105,20 +80,35 @@ namespace Mkey
         void OnEnable()
         {
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
+            IronSourceBannerEvents.onAdLoadedEvent += HandleOnAdLoaded;
+            IronSourceBannerEvents.onAdLoadFailedEvent += HandleOnAdFailed;
+            IronSourceInterstitialEvents.onAdReadyEvent += HandleInterstitialLoaded;
+            IronSourceInterstitialEvents.onAdLoadFailedEvent += HandleInterstitialFailedToLoad;
+            IronSourceInterstitialEvents.onAdClosedEvent += HandleOnAdClosed;
+            IronSourceRewardedVideoEvents.onAdClosedEvent += HandleRewardBasedVideoClosed;
+            IronSourceRewardedVideoEvents.onAdRewardedEvent += HandleRewardBasedVideoRewarded;
         }
 
         void OnDisable()
         {
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+            IronSourceBannerEvents.onAdLoadedEvent -= HandleOnAdLoaded;
+            IronSourceBannerEvents.onAdLoadFailedEvent -= HandleOnAdFailed;
+            IronSourceInterstitialEvents.onAdReadyEvent -= HandleInterstitialLoaded;
+            IronSourceInterstitialEvents.onAdLoadFailedEvent -= HandleInterstitialFailedToLoad;
+            IronSourceInterstitialEvents.onAdClosedEvent -= HandleOnAdClosed;
+            IronSourceRewardedVideoEvents.onAdClosedEvent -= HandleRewardBasedVideoClosed;
+            IronSourceRewardedVideoEvents.onAdRewardedEvent -= HandleRewardBasedVideoRewarded;
         }
 
         void OnActiveSceneChanged(Scene previousScene, Scene newScene)
         {
             if (requestBanner)
             {
-                RequestBanner();
+                IronSource.Agent.loadBanner(IronSourceBannerSize.BANNER, IronSourceBannerPosition.BOTTOM);
             }
         }
+
         public bool IsBanner()
         {
             return requestBanner;
@@ -130,321 +120,155 @@ namespace Mkey
             deltaTime += (Time.deltaTime - this.deltaTime) * 0.1f;
         }
 
-        private void OnGUI() // https://github.com/googleads/googleads-mobile-unity/blob/master/samples/HelloWorld/Assets/Scripts/GoogleMobileAdsDemoScript.cs
+        private void OnGUI()
         {
-            if (!showTestGui) return;
-            GUIStyle style = new GUIStyle();
-
-            Rect rect = new Rect(0, 0, Screen.width, Screen.height);
-            style.alignment = TextAnchor.LowerRight;
-            style.fontSize = (int)(Screen.height * 0.06);
-            style.normal.textColor = new Color(0.0f, 0.0f, 0.5f, 1.0f);
-            float fps = 1.0f / this.deltaTime;
-            string text = string.Format("{0:0.} fps", fps);
-            GUI.Label(rect, text, style);
-
-            // Puts some basic buttons onto the screen.
-            GUI.skin.button.fontSize = (int)(0.035f * Screen.width);
-            float buttonWidth = 0.35f * Screen.width;
-            float buttonHeight = 0.15f * Screen.height;
-            float columnOnePosition = 0.1f * Screen.width;
-            float columnTwoPosition = 0.55f * Screen.width;
-
-            Rect requestBannerRect = new Rect(
-                columnOnePosition,
-                0.05f * Screen.height,
-                buttonWidth,
-                buttonHeight);
-            if (GUI.Button(requestBannerRect, "Request\nBanner"))
-            {
-                this.RequestBanner();
-            }
-
-            Rect destroyBannerRect = new Rect(
-                columnOnePosition,
-                0.225f * Screen.height,
-                buttonWidth,
-                buttonHeight);
-            if (GUI.Button(destroyBannerRect, "Destroy\nBanner"))
-            {
-                this.bannerView.Destroy();
-            }
-
-            Rect requestInterstitialRect = new Rect(
-                columnOnePosition,
-                0.4f * Screen.height,
-                buttonWidth,
-                buttonHeight);
-            if (GUI.Button(requestInterstitialRect, "Request\nInterstitial"))
-            {
-                this.RequestInterstitial();
-            }
-
-            Rect showInterstitialRect = new Rect(
-                columnOnePosition,
-                0.575f * Screen.height,
-                buttonWidth,
-                buttonHeight);
-            if (GUI.Button(showInterstitialRect, "Show\nInterstitial"))
-            {
-                this.ShowInterstitial(null, null);
-            }
-
-            Rect destroyInterstitialRect = new Rect(
-                columnOnePosition,
-                0.75f * Screen.height,
-                buttonWidth,
-                buttonHeight);
-            if (GUI.Button(destroyInterstitialRect, "Destroy\nInterstitial"))
-            {
-                this.interstitial.Destroy();
-            }
-
-            Rect requestRewardedRect = new Rect(
-                columnTwoPosition,
-                0.05f * Screen.height,
-                buttonWidth,
-                buttonHeight);
-            if (GUI.Button(requestRewardedRect, "Request\nRewarded Ad"))
-            {
-                this.CreateAndLoadRewardedAd();
-            }
-
-            Rect showRewardedRect = new Rect(
-                columnTwoPosition,
-                0.225f * Screen.height,
-                buttonWidth,
-                buttonHeight);
-            if (GUI.Button(showRewardedRect, "Show\nRewarded Ad"))
-            {
-                if (rewardAds != null && rewardAds.Count > 0 && rewardAds[0] != null)
-                {
-                    this.ShowRewardedAd(rewardAds[0].Name, null, null, null);
-                }
-            }
-
-            Rect textOutputRect = new Rect(
-                columnTwoPosition,
-                0.925f * Screen.height,
-                buttonWidth,
-                0.05f * Screen.height);
-            GUI.Label(textOutputRect, outputMessage);
+            // GUIStyle style = new GUIStyle();
+            //
+            // Rect rect = new Rect(0, 0, Screen.width, Screen.height);
+            // style.alignment = TextAnchor.LowerRight;
+            // style.fontSize = (int)(Screen.height * 0.06);
+            // style.normal.textColor = new Color(0.0f, 0.0f, 0.5f, 1.0f);
+            // float fps = 1.0f / this.deltaTime;
+            // string text = string.Format("{0:0.} fps", fps);
+            // GUI.Label(rect, text, style);
+            //
+            // // Puts some basic buttons onto the screen.
+            // GUI.skin.button.fontSize = (int)(0.035f * Screen.width);
+            // float buttonWidth = 0.35f * Screen.width;
+            // float buttonHeight = 0.15f * Screen.height;
+            // float columnOnePosition = 0.1f * Screen.width;
+            // float columnTwoPosition = 0.55f * Screen.width;
+            //
+            // Rect requestBannerRect = new Rect(
+            //     columnOnePosition,
+            //     0.05f * Screen.height,
+            //     buttonWidth,
+            //     buttonHeight);
+            // if (GUI.Button(requestBannerRect, "Request\nBanner"))
+            // {
+            //     this.RequestBanner();
+            // }
+            //
+            // Rect destroyBannerRect = new Rect(
+            //     columnOnePosition,
+            //     0.225f * Screen.height,
+            //     buttonWidth,
+            //     buttonHeight);
+            // if (GUI.Button(destroyBannerRect, "Destroy\nBanner"))
+            // {
+            //    // this.bannerView.Destroy();
+            // }
+            //
+            // Rect requestInterstitialRect = new Rect(
+            //     columnOnePosition,
+            //     0.4f * Screen.height,
+            //     buttonWidth,
+            //     buttonHeight);
+            // if (GUI.Button(requestInterstitialRect, "Request\nInterstitial"))
+            // {
+            //     this.RequestInterstitial();
+            // }
+            //
+            // Rect showInterstitialRect = new Rect(
+            //     columnOnePosition,
+            //     0.575f * Screen.height,
+            //     buttonWidth,
+            //     buttonHeight);
+            // if (GUI.Button(showInterstitialRect, "Show\nInterstitial"))
+            // {
+            //     this.ShowInterstitial(null, null);
+            // }
+            //
+            // Rect destroyInterstitialRect = new Rect(
+            //     columnOnePosition,
+            //     0.75f * Screen.height,
+            //     buttonWidth,
+            //     buttonHeight);
+            // if (GUI.Button(destroyInterstitialRect, "Destroy\nInterstitial"))
+            // {
+            //   //  this.interstitial.Destroy();
+            // }
+            //
+            // Rect requestRewardedRect = new Rect(
+            //     columnTwoPosition,
+            //     0.05f * Screen.height,
+            //     buttonWidth,
+            //     buttonHeight);
+            // if (GUI.Button(requestRewardedRect, "Request\nRewarded Ad"))
+            // {
+            //     this.CreateAndLoadRewardedAd();
+            // }
+            //
+            // Rect showRewardedRect = new Rect(
+            //     columnTwoPosition,
+            //     0.225f * Screen.height,
+            //     buttonWidth,
+            //     buttonHeight);
+            // if (GUI.Button(showRewardedRect, "Show\nRewarded Ad"))
+            // {
+            //     if (rewardAds != null && rewardAds.Count > 0 && rewardAds[0] != null)
+            //     {
+            //         this.ShowRewardedAd(rewardAds[0].Name, null, null, null);
+            //     }
+            // }
+            //
+            // Rect textOutputRect = new Rect(
+            //     columnTwoPosition,
+            //     0.925f * Screen.height,
+            //     buttonWidth,
+            //     0.05f * Screen.height);
+            // GUI.Label(textOutputRect, outputMessage);
         }
 
         private void OnDestroy()
         {
-            if (interstitial != null)
-            {
-                interstitial.Destroy();
-            }
-
-            if (bannerView != null)
-            {
-                bannerView.Destroy();
-            }
+            IronSource.Agent.destroyBanner();
         }
         #endregion regular
 
         #region banner
-        public void HandleOnAdLoaded()
+        public void HandleOnAdLoaded(IronSourceAdInfo adInfo)
         {
             print("HandleAdLoaded event received");
-            //bannerView.Show();
             bannerControl = FindObjectOfType<BannerControl>();
             bannerControl.ShowBannerActions();
         }
-        public void HandleOnAdFailed(LoadAdError error)
+        public void HandleOnAdFailed(IronSourceError error)
         {
-            Debug.LogError("Banner view failed to load an ad with error : "
-                + error);
+            Debug.LogError("Banner view failed to load an ad with error : " + error.getDescription());
             bannerControl = FindObjectOfType<BannerControl>();
             bannerControl.HideBannerActions();
         }
 
-        public void RequestBanner(AdPosition bannerPosition)
-        {
-            this.bannerPosition = bannerPosition;
-            RequestBanner();
-        }
-
         public void RequestBanner()
         {
-#if UNITY_ANDROID
-            string adUnitId = bannerAdUnitIdAndroid;
-#elif UNITY_IPHONE
-        string adUnitId = bannerAdUnitIdIos;
-#else
-        string adUnitId ="unexpected_platform";
-#endif
-            // Clean up banner ad before creating a new one.
-            if (bannerView != null)
-            {
-                bannerView.Destroy();
-            }
-            bannerView = new BannerView(adUnitId, AdSize.Banner, bannerPosition);
-
-            // create our request used to load the ad.
-            AdRequest adRequest = new AdRequest();
-            adRequest.Keywords.Add("unity-admob-sample");
-
-            bannerView.OnBannerAdLoaded += HandleOnAdLoaded;
-            bannerView.OnBannerAdLoadFailed += HandleOnAdFailed;
-
-            // send the request to load the ad.
-            Debug.Log("Loading banner ad.");
-            bannerView.LoadAd(adRequest);
-            
-    bannerView.OnAdPaid += (AdValue adValue) =>
-    {
-        Debug.Log(String.Format("Banner view paid {0} {1}.",
-            adValue.Value,
-            adValue.CurrencyCode));
-    };
-    // Raised when an impression is recorded for an ad.
-    bannerView.OnAdImpressionRecorded += () =>
-    {
-        Debug.Log("Banner view recorded an impression.");
-    };
-    // Raised when a click is recorded for an ad.
-    bannerView.OnAdClicked += () =>
-    {
-        Debug.Log("Banner view was clicked.");
-    };
-    // Raised when an ad opened full screen content.
-    bannerView.OnAdFullScreenContentOpened += () =>
-    {
-        Debug.Log("Banner view full screen content opened.");
-    };
-    // Raised when the ad closed full screen content.
-    bannerView.OnAdFullScreenContentClosed += () =>
-    {
-        bannerControl = FindObjectOfType<BannerControl>();
-        bannerControl.HideBannerActions();
-        Debug.Log("Banner view full screen content closed.");
-    };
-
+            IronSource.Agent.loadBanner(IronSourceBannerSize.BANNER, IronSourceBannerPosition.BOTTOM);
         }
 
         public void HideBanner()
         {
-            if (bannerView != null)
-            {
-                bannerView.Hide();
-            }
+            IronSource.Agent.hideBanner();
         }
 
         public void ShowBanner()
         {
-            if (bannerView != null && SceneManager.GetActiveScene().name != "1_Lobby")
-            {
-                bannerView.Show();
-            }
+            IronSource.Agent.displayBanner();
         }
         #endregion banner
 
         #region interstitial
         private void RequestInterstitial()
         {
-#if UNITY_ANDROID
-            string adUnitId = interstitialAdUnitIdAndroid;
-#elif UNITY_IPHONE
-            string adUnitId = interstitialAdUnitIdIos;
-#else
-            string adUnitId = "unexpected_platform";
-#endif
-           // Clean up the old ad before loading a new one.
-      if (interstitial != null)
-      {
-            interstitial.Destroy();
-            interstitial = null;
-      }
-
-      Debug.Log("Loading the interstitial ad.");
-
-      // create our request used to load the ad.
-      var adRequest = new AdRequest();
-      adRequest.Keywords.Add("unity-admob-sample");
-
-
-      // send the request to load the ad.
-      InterstitialAd.Load(adUnitId, adRequest,
-          (InterstitialAd ad, LoadAdError error) =>
-          {
-              // if error is not null, the load request failed.
-              if (error != null || ad == null)
-              {
-                  Debug.LogError("interstitial ad failed to load an ad " +
-                                 "with error : " + error);
-                  return;
-              }
-
-              Debug.Log("Interstitial ad loaded with response : "
-                        + ad.GetResponseInfo());
-
-              interstitial = ad;
-          });
-            
-
-        }
-
-      private void RegisterEventHandlers(InterstitialAd ad)
-{
-    // Raised when the ad is estimated to have earned money.
-    ad.OnAdPaid += (AdValue adValue) =>
-    {
-        Debug.Log(String.Format("Interstitial ad paid {0} {1}.",
-            adValue.Value,
-            adValue.CurrencyCode));
-    };
-    // Raised when an impression is recorded for an ad.
-    ad.OnAdImpressionRecorded += () =>
-    {
-        Debug.Log("Interstitial ad recorded an impression.");
-    };
-    // Raised when a click is recorded for an ad.
-    ad.OnAdClicked += () =>
-    {
-        Debug.Log("Interstitial ad was clicked.");
-    };
-    // Raised when an ad opened full screen content.
-    ad.OnAdFullScreenContentOpened += () =>
-    {
-        Debug.Log("Interstitial ad full screen content opened.");
-    };
-    // Raised when the ad closed full screen content.
-    ad.OnAdFullScreenContentClosed += () =>
-    {
-        Debug.Log("Interstitial ad full screen content closed.");
-    };
-    // Raised when the ad failed to open full screen content.
-    ad.OnAdFullScreenContentFailed += (AdError error) =>
-    {
-        Debug.LogError("Interstitial ad failed to open full screen content " +
-                       "with error : " + error);
-    };
-}
-
-        bool ireqStarted = false;
-        private IEnumerator NewInterstitialRequest()
-        {
-            if (!ireqStarted)
-            {
-                ireqStarted = true;
-                yield return new WaitForSeconds(3f);
-                RequestInterstitial();
-                ireqStarted = false;
-            }
+            IronSource.Agent.loadInterstitial();
         }
 
         public void ShowInterstitial(Action interstitialOpenedCallBack, Action interstitialClosedCallBack)
         {
             this.interstitialOpenedCallBack = interstitialOpenedCallBack;
             this.interstitialClosedCallBack = interstitialClosedCallBack;
-            if (interstitial != null && interstitial.CanShowAd())
+            if (IronSource.Agent.isInterstitialReady())
             {
-                Debug.Log("Showing interstitial ad.");
-                interstitial.Show();
-                StartCoroutine(NewInterstitialRequest());
+                IronSource.Agent.showInterstitial();
             }
             else
             {
@@ -452,80 +276,56 @@ namespace Mkey
                 RequestInterstitial();
             }
         }
+
+        public void HandleInterstitialLoaded(IronSourceAdInfo adInfo)
+        {
+            print("HandleInterstitialLoaded event received");
+        }
+
+        public void HandleInterstitialFailedToLoad(IronSourceError error)
+        {
+            Debug.LogError("Interstitial ad failed to load with error: " + error.getDescription());
+        }
+
+        public void HandleOnAdClosed(IronSourceAdInfo adInfo)
+        {
+            interstitialClosedCallBack?.Invoke();
+        }
         #endregion interstitial
 
         #region rewarded ad
         private void CreateAndLoadRewardedAd()
         {
-            if (rewardAds == null || rewardAds.Count == 0) return;
-            foreach (var item in rewardAds)
-            {
-                if (item != null) item.CreateAndLoadRewardedAd();
-            }
+            IronSource.Agent.loadRewardedVideo();
         }
 
         public void ShowRewardedAd(string adName, Action rewardedOpenedCallBack, Action rewardedClosedCallBack, Action<bool, string, double> rewardCallBack)
         {
-            if (rewardAds == null || rewardAds.Count == 0) return;
+            this.rewardedOpenedCallBack = rewardedOpenedCallBack;
+            this.rewardedClosedCallBack = rewardedClosedCallBack;
+            this.rewardCallBack = rewardCallBack;
 
-            string defaultAdName = "default";
-            if (string.IsNullOrEmpty(adName)) adName = defaultAdName;
-
-            RewardAd rA = null;
-            foreach (var item in rewardAds)
+            if (IronSource.Agent.isRewardedVideoAvailable())
             {
-                if (String.Equals(item.Name, adName, StringComparison.Ordinal))
-                    rA = item;
+                IronSource.Agent.showRewardedVideo();
             }
-
-            if (rA == null && String.Equals(adName, defaultAdName, StringComparison.Ordinal))
-            {
-                rA = rewardAds[0];
-            }
-
-            if (rA == null)
-            {
-                Debug.Log("Rearded ad: " + adName + " not exist");
-                return;
-            }
-            rA.ShowRewardedAd(rewardedOpenedCallBack, rewardedClosedCallBack, rewardCallBack);
-        }
-        #endregion rewarded ad
-
-#else
-        public static AdsControl Instance;
-
-        #region regular
-        private void Awake()
-        {
-            if (Instance) Destroy(gameObject);
             else
             {
-                Instance = this;
+                Debug.Log("Rewarded ad is not available.");
+                CreateAndLoadRewardedAd();
             }
         }
-        #endregion regular
 
-        public void ShowInterstitial(Action interstitialOpenedCallBack, Action interstitialClosedCallBack)
+        public void HandleRewardBasedVideoClosed(IronSourceAdInfo adInfo)
         {
-            Debug.Log("ADD ADDGADS sripting symbol in project settings");
+            rewardedClosedCallBack?.Invoke();
         }
 
-        public void ShowRewardedAd(string adName, Action rewardedOpenedCallBack, Action rewardedClosedCallBack, Action<bool, string, double> rewardCallBack)
+        public void HandleRewardBasedVideoRewarded(IronSourcePlacement placement, IronSourceAdInfo adInfo)
         {
-            Debug.Log("ADD ADDGADS sripting symbol in project settings");
+            rewardCallBack?.Invoke(true, placement.getRewardName(), placement.getRewardAmount());
         }
-
-        public void HideBanner()
-        {
-            Debug.Log("ADD ADDGADS sripting symbol in project settings");
-        }
-
-        public void ShowBanner()
-        {
-            Debug.Log("ADD ADDGADS sripting symbol in project settings");
-        }
-#endif
+        #endregion rewarded ad
     }
 
     [Serializable]
@@ -538,65 +338,23 @@ namespace Mkey
         [SerializeField]
         private string adUnitIdIOS = "ca-app-pub-3940256099942544/1712485313";      // test
 
-#if ADDGADS
         public string Name { get { return name; } }
-        private Action<bool, string, double> rewardCallBack;    //  <well, args.type or message, args.amount>
-        private Action rewardedOpenedCallBack;                  //  MSound.SetSound(false); 
-        private Action rewardedClosedCallBack;                  //  MSound.SetSound(true);
-
-        private RewardedAd rewardedAd;
-
-        private RewardAd()
-        {
-            name = "rewardedad";
-            adUnitIdAndroid = "ca-app-pub-3940256099942544/5224354917";
-            adUnitIdIOS = "ca-app-pub-3940256099942544/5224354917";
-        }
+        private Action<bool, string, double> rewardCallBack;
+        private Action rewardedOpenedCallBack;
+        private Action rewardedClosedCallBack;
 
         private string adUnitId = "";
 
-        public void CreateAndLoadRewardedAd() //https://developers.google.com/admob/unity/rewarded-ads
+        public void CreateAndLoadRewardedAd()
         {
 #if UNITY_ANDROID
             adUnitId = adUnitIdAndroid;
 #elif UNITY_IPHONE
-             adUnitId = adUnitIdIOS;
+            adUnitId = adUnitIdIOS;
 #else
-             adUnitId = "unexpected_platform";
+            adUnitId = "unexpected_platform";
 #endif
-            Debug.Log("RequestRewardBasedVideo (adUnitId): " + adUnitId);
-
-            // Clean up the old ad before loading a new one.
-            if (rewardedAd != null)
-            {
-                rewardedAd.Destroy();
-                rewardedAd = null;
-            }
-
-
-            // create our request used to load the ad.
-            var adRequest = new AdRequest();
-
-            // send the request to load the ad.
-            RewardedAd.Load(adUnitId, adRequest,
-                (RewardedAd ad, LoadAdError error) =>
-                {
-              // if error is not null, the load request failed.
-              if (error != null || ad == null)
-                    {
-                        Debug.LogError("Rewarded ad failed to load an ad " +
-                                       "with error : " + error);
-                        return;
-                    }
-
-                    Debug.Log("Rewarded ad loaded with response : "
-                              + ad.GetResponseInfo());
-
-                    rewardedAd = ad;
-                    RegisterEventHandlers(rewardedAd);
-                    RegisterReloadHandler(ad);
-                });
-
+            IronSource.Agent.loadRewardedVideo();
         }
 
         public void ShowRewardedAd(Action rewardedOpenedCallBack, Action rewardedClosedCallBack, Action<bool, string, double> rewardCallBack)
@@ -605,93 +363,16 @@ namespace Mkey
             this.rewardedClosedCallBack = rewardedClosedCallBack;
             this.rewardCallBack = rewardCallBack;
 
-            if (rewardedAd != null && rewardedAd.CanShowAd())
+            if (IronSource.Agent.isRewardedVideoAvailable())
             {
-                Debug.Log("show loaded video");
-                rewardedAd.Show((rew) => { });
-                rewardCallBack?.Invoke(true, "Rewarded ad: " + ToString() + " -  loaded", 0);
+                IronSource.Agent.showRewardedVideo();
             }
             else
             {
-                Debug.Log("Rewarded ad: " + ToString() + " -  not loaded");
-                rewardCallBack?.Invoke(false, "Rewarded ad: " + ToString() + " -  not loaded", 0);
+                Debug.Log("Rewarded ad is not available.");
+                CreateAndLoadRewardedAd();
             }
         }
-
-        private void RegisterEventHandlers(RewardedAd ad)
-        {
-            // Raised when the ad is estimated to have earned money.
-            ad.OnAdPaid += (AdValue adValue) =>
-            {
-                Debug.Log(String.Format("Rewarded ad paid {0} {1}.",
-                    adValue.Value,
-                    adValue.CurrencyCode));
-                rewardCallBack?.Invoke(true, adValue.CurrencyCode, adValue.Value);
-            };
-            // Raised when an impression is recorded for an ad.
-            ad.OnAdImpressionRecorded += () =>
-            {
-                Debug.Log("Rewarded ad recorded an impression.");
-            };
-            // Raised when a click is recorded for an ad.
-            ad.OnAdClicked += () =>
-            {
-                Debug.Log("Rewarded ad was clicked.");
-            };
-            // Raised when an ad opened full screen content.
-            ad.OnAdFullScreenContentOpened += () =>
-            {
-                rewardedOpenedCallBack?.Invoke();
-                Debug.Log("Rewarded ad full screen content opened.");
-            };
-            // Raised when the ad closed full screen content.
-            ad.OnAdFullScreenContentClosed += () =>
-            {
-                rewardedClosedCallBack?.Invoke();
-                Debug.Log("Rewarded ad full screen content closed.");
-            };
-            // Raised when the ad failed to open full screen content.
-            ad.OnAdFullScreenContentFailed += (AdError error) =>
-            {
-                Debug.LogError("Rewarded ad failed to open full screen content " +
-                               "with error : " + error);
-            };
-        }
-
-        /// <summary>
-        /// To prepare a rewarded ad for the next impression opportunity, preload the rewarded ad once the OnAdFullScreenContentClosed or OnAdFullScreenContentFailed ad event is raised.
-        /// </summary>
-        /// <param name="ad"></param>
-        private void RegisterReloadHandler(RewardedAd ad)
-        {
-            // Raised when the ad closed full screen content.
-            ad.OnAdFullScreenContentClosed += () =>
-            {
-                Debug.Log("Rewarded Ad full screen content closed.");
-
-                // Reload the ad so that we can show another as soon as possible.
-                CreateAndLoadRewardedAd();
-            };
-
-            // Raised when the ad failed to open full screen content.
-            ad.OnAdFullScreenContentFailed += (AdError error) =>
-            {
-                Debug.LogError("Rewarded ad failed to open full screen content " +
-                               "with error : " + error);
-
-                // Reload the ad so that we can show another as soon as possible.
-                CreateAndLoadRewardedAd();
-            };
-        }
-
-
-        public override string ToString()
-        {
-            return "rewarde ad name: " + name + ", (adUnitId): " + adUnitId;
-        }
-#else
-        public string Name { get { return ""; } }
-#endif
     }
 
 #if UNITY_EDITOR
@@ -705,39 +386,39 @@ namespace Mkey
             sl.margin = new RectOffset(0,0,-15,-15);
 
 
-            GUILayout.Space(16);
-            GUILayout.Label("Android test ad units IDs ", EditorStyles.boldLabel);
-            EditorGUILayout.SelectableLabel("Banner:         ca-app-pub-3940256099942544/6300978111", sl);
-            EditorGUILayout.SelectableLabel("Interstitial:   ca-app-pub-3940256099942544/1033173712", sl);
-            EditorGUILayout.SelectableLabel("Rewarded Video: ca-app-pub-3940256099942544/5224354917", sl);
-            GUILayout.Space(8);
-            GUILayout.Label("IOS test ad units IDs ", EditorStyles.boldLabel);
-            EditorGUILayout.SelectableLabel("Banner:         ca-app-pub-3940256099942544/2934735716", sl);
-            EditorGUILayout.SelectableLabel("Interstitial:   ca-app-pub-3940256099942544/4411468910", sl);
-            EditorGUILayout.SelectableLabel("Rewarded Video: ca-app-pub-3940256099942544/1712485313", sl);
+            // GUILayout.Space(16);
+            // GUILayout.Label("Android test ad units IDs ", EditorStyles.boldLabel);
+            // EditorGUILayout.SelectableLabel("Banner:         ca-app-pub-3940256099942544/6300978111", sl);
+            // EditorGUILayout.SelectableLabel("Interstitial:   ca-app-pub-3940256099942544/1033173712", sl);
+            // EditorGUILayout.SelectableLabel("Rewarded Video: ca-app-pub-3940256099942544/5224354917", sl);
+            // GUILayout.Space(8);
+            // GUILayout.Label("IOS test ad units IDs ", EditorStyles.boldLabel);
+            // EditorGUILayout.SelectableLabel("Banner:         ca-app-pub-3940256099942544/2934735716", sl);
+            // EditorGUILayout.SelectableLabel("Interstitial:   ca-app-pub-3940256099942544/4411468910", sl);
+            // EditorGUILayout.SelectableLabel("Rewarded Video: ca-app-pub-3940256099942544/1712485313", sl);
 
 
             GUILayout.Space(8);
-            GUILayout.Label("Admob links:", EditorStyles.boldLabel);
+            GUILayout.Label("IronSource links:", EditorStyles.boldLabel);
             if (LinkLabel(new GUIContent("Get Started")))
             {
-                Application.OpenURL("https://developers.google.com/admob/unity/quick-start");
+                Application.OpenURL("https://developers.is.com/ironsource-mobile/unity/levelplay-starter-kit/");
             }
             if (LinkLabel(new GUIContent("Banner Ads")))
             {
-                Application.OpenURL("https://developers.google.com/admob/unity/banner");
+                Application.OpenURL("https://developers.is.com/ironsource-mobile/unity/banner-integration-unity/");
             }
             if (LinkLabel(new GUIContent("Interstitial Ads")))
             {
-                Application.OpenURL("https://developers.google.com/admob/unity/interstitial");
+                Application.OpenURL("https://developers.is.com/ironsource-mobile/unity/interstitial-integration-unity/");
             }
             if (LinkLabel(new GUIContent("Rewarded Ads")))
             {
-                Application.OpenURL("https://developers.google.com/admob/unity/rewarded-ads");
+                Application.OpenURL("https://developers.is.com/ironsource-mobile/unity/rewarded-video-integration-unity/");
             }
             if (LinkLabel(new GUIContent("Test Ads")))
             {
-                Application.OpenURL("https://developers.google.com/admob/unity/test-ads");
+                Application.OpenURL("https://developers.is.com/ironsource-mobile/unity/unity-levelplay-test-suite/#step-1");
             }
         }
 
