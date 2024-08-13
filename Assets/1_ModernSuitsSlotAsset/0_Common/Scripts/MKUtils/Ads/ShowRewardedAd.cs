@@ -4,11 +4,6 @@ using UnityEngine;
 using UnityEngine.Events;
 
 
-/*
-    30.10.2020 - first
-    11.01.2021 - improve sound
- */
-
 namespace Mkey
 {
     public class ShowRewardedAd : MonoBehaviour

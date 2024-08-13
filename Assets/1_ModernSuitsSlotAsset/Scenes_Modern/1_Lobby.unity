@@ -10068,18 +10068,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99aef9a25ac65784688be099e72f39e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  appID: 
+  AndroidAppID: 1f510a9f5
+  IOSAppID: 1f34c8115
+  isTesting: 0
+  isChildDirected: 0
   requestBanner: 1
-  bannerAdUnitIdAndroid: eazktqhowafqp4x5
-  bannerAdUnitIdIos: eazktqhowafqp4x5
   requestInterstitial: 1
-  interstitialAdUnitIdAndroid: 4ik4ooautolvyr5p
-  interstitialAdUnitIdIos: 4ik4ooautolvyr5p
   requestRewardedAds: 1
-  rewardAds:
-  - name: default
-    adUnitIdAndroid: b38z9oz7tg64xji3
-    adUnitIdIOS: b38z9oz7tg64xji3
 --- !u!4 &742270089
 Transform:
   m_ObjectHideFlags: 0
